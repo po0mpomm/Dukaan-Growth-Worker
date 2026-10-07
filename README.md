@@ -1,96 +1,131 @@
 # Dukaan Growth Worker 🛒
+**Local-First, Privacy-Safe AI Worker for Kirana & Small Retail Growth**
 
-**A local-first, privacy-safe AI Worker that helps kirana and small retail owners review monthly business activity, identify weak areas, create follow-up actions, and track month-on-month growth.**
-
-Built for **Eko's Micro-Entrepreneur Growth Worker** assignment — Applied AI / Agentic AI / Forward-Deployed AI Worker evaluation.
+Built for **Eko's Micro-Entrepreneur Growth Worker** assignment (Applied AI / Agentic AI / Forward-Deployed AI Worker).  
+Repository: [https://github.com/po0mpomm/Dukaan-Growth-Worker](https://github.com/po0mpomm/Dukaan-Growth-Worker)
 
 ---
 
-## Quick Start (No Docker Needed)
+## ⚡ Quick Start (Windows & Linux)
+
+### Option 1: One-Click Windows Launcher (Recommended)
+```powershell
+# In PowerShell:
+powershell -ExecutionPolicy Bypass -File .\run.ps1
+```
+*Automatically launches FastAPI backend on `http://127.0.0.1:8000` and Next.js 15 frontend on `http://localhost:3000`.*
+
+### Option 2: Manual Terminal Setup
+```bash
+# 1. Backend (Python 3.13)
+cd backend
+pip install -r requirements.txt
+uvicorn app.main:create_app --factory --host 127.0.0.1 --port 8000 --reload
+
+# 2. Frontend (Node 22 / Next.js 15) in another terminal
+cd frontend
+npm install
+npm run dev
+
+# 3. Open browser:
+# Frontend UI: http://localhost:3000
+# Backend API Docs: http://127.0.0.1:8000/docs
+```
+
+### Option 3: Docker Compose
+```bash
+# Edge Monolith (core profile):
+docker compose --profile core up --build
+
+# Control Plane with PostgreSQL 16 & Valkey (cloud profile):
+docker compose --profile cloud up --build
+```
+
+---
+
+## 🧪 Testing & Evaluation Harness
 
 ```bash
-# 1. Clone
-git clone https://github.com/po0mpomm/Dukaan-Growth-Worker.git
-cd Dukaan-Growth-Worker
+# Run full unit and integration test suite (14 passing tests):
+python -m pytest backend/tests/ -v
 
-# 2. Backend (Python 3.13+)
-python -m venv .venv
-.venv\Scripts\activate          # Windows
-pip install -r backend/requirements.txt
+# Run Cloud k-suppression test (40-shop simulation):
+python -m pytest cloud/tests/test_k_suppression.py -v
 
-# 3. Frontend (Node 22+)
-cd frontend && npm install && cd ..
+# Run Evaluation Benchmark Suite (4 scenarios):
+python eval/runner.py
+```
 
-# 4. Run both
-make dev
-# Backend: http://localhost:8000
-# Frontend: http://localhost:3000
+Inspect the historical evaluation progress register in [`eval/history.csv`](eval/history.csv).
+
+---
+
+## 🏗️ Architecture & Plane Separation
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  EDGE PLANE (Runs 100% locally on 4 GB RAM shop machine or laptop)          │
+│                                                                             │
+│  ┌─────────────────────────────────┐   HTTP   ┌──────────────────────────┐  │
+│  │  Next.js 15 App Router (:3000)  │ ◄──────► │   FastAPI Backend (:8000)│  │
+│  │  • Mobile-first (375px+ Meena)  │  Proxy   │   • Modular Monolith     │  │
+│  │  • Bilingual EN / HI toggle     │          │   • Ingest & Sanitizer   │  │
+│  │  • Web Speech TTS read-aloud    │          │   • Completeness Scorer  │  │
+│  │  • 1-Click synthetic scenarios  │          │   • FIFO Udhaar Aging    │  │
+│  │  • WhatsApp clipboard drafts    │          │   • W1–W7 Rules Engine   │  │
+│  └─────────────────────────────────┘          │   • G1–G9 Guardrails     │  │
+│                                               │   • Phrasing Adapters    │  │
+│                                               └─────────────┬────────────┘  │
+│                                                             │ WAL Mode      │
+│                                               ┌─────────────▼────────────┐  │
+│                                               │   Local SQLite Stores    │  │
+│                                               │   • analytics.db         │  │
+│                                               │   • audit.db (SHA-256)   │  │
+│                                               │   • outbox.db (Sync)     │  │
+│                                               └─────────────┬────────────┘  │
+└─────────────────────────────────────────────────────────────┼───────────────┘
+                                           Consented Banded   │ (Online only)
+                                           Payload (Zero-PII) ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  CLOUD PLANE (Tier B: PostgreSQL 16 + Valkey + Cloud Aggregator)            │
+│  • Idempotent ingestion of banded aggregates                                 │
+│  • k-Anonymity view: Macro-cohort cells with count < 5 are suppressed       │
+└─────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## Architecture
+## 📋 Complete Deliverables Index
 
-```
-Next.js 15 (Frontend, :3000)  ←→  FastAPI (Backend, :8000)  ←→  SQLite (Local)
-                                         ↓
-                              Optional: Eko Cloud API (Tier B)
-                              Only banded aggregates, with consent
-```
+All mandated deliverable items from the Eko assignment email are documented and implemented:
 
-See [docs/TRD_v2.md](docs/TRD_v2.md) for full architecture.
-
----
-
-## Eko Assignment Checklist
-
-| Item | Location |
-|:---|:---|
-| Goal and system definition | [docs/PRD_v2.md §4](docs/PRD_v2.md) |
-| Definition of Done | [docs/PRD_v2.md §15](docs/PRD_v2.md) |
-| Sample inputs | [eval/datasets/01_healthy/](eval/datasets/01_healthy/) |
-| Sample outputs | [docs/sample_output.json](docs/sample_output.json) |
-| Prompts, rules, logic | [packages/templates/](packages/templates/) + [packages/rules/](packages/rules/) |
-| Workflow states | [docs/STATE_DIAGRAM.md](docs/STATE_DIAGRAM.md) |
-| Memory/state strategy | [docs/TRD_v2.md §7](docs/TRD_v2.md) |
-| Exception handling | [docs/TRD_v2.md §15](docs/TRD_v2.md) |
-| Privacy / DPDP | [docs/PRIVACY_DPDP_NOTE.md](docs/PRIVACY_DPDP_NOTE.md) |
-| Audit logging | `backend/app/modules/audit/` |
-| Intentional failure demo | DemoSwitcher → "18 Days Missing" |
-| Autonomous vs human-led | [docs/PRD_v2.md §18](docs/PRD_v2.md) |
-| Next version roadmap | [docs/PRD_v2.md §23](docs/PRD_v2.md) |
-| Learning concept | [docs/LEARNING_CONCEPT.md](docs/LEARNING_CONCEPT.md) |
+| Requirement | Deliverable File | Description |
+|:---|:---|:---|
+| **Learning Concept Report** | [`docs/LEARNING_CONCEPT_REPORT.md`](docs/LEARNING_CONCEPT_REPORT.md) | 3-page deep dive on Evaluation Harnesses for Deterministic AI Agents |
+| **Candidate Q&A** | [`docs/CANDIDATE_QA.md`](docs/CANDIDATE_QA.md) | Answers to all 12 "Define Before Building" questions |
+| **Failure Scenarios** | [`docs/FAILURE_SCENARIOS.md`](docs/FAILURE_SCENARIOS.md) | 5 edge case failure walkthroughs & degradation mechanisms |
+| **Prompt Catalog** | [`docs/PROMPTS.md`](docs/PROMPTS.md) | System phrasing prompts, bilingual templates, and schemas |
+| **Workflow State Machine** | [`docs/STATE_DIAGRAM.md`](docs/STATE_DIAGRAM.md) | Mermaid state diagram, transition invariants, and timeouts |
+| **Architecture Decision Records** | [`docs/ADR.md`](docs/ADR.md) | ADR 001 to ADR 012 detailing design trade-offs |
+| **Sample Inputs & Outputs** | [`docs/SAMPLE_INPUTS_OUTPUTS.md`](docs/SAMPLE_INPUTS_OUTPUTS.md) | Sample CSVs and verified `ResultObject` JSON payloads |
+| **Privacy & DPDP Approach** | [`docs/PRIVACY_APPROACH.md`](docs/PRIVACY_APPROACH.md) | Architectural zero-PII guarantees, right to erasure, SHA-256 hash chains |
+| **Evaluation History** | [`eval/history.csv`](eval/history.csv) | Empirical progression across 3 iterations |
+| **Evaluation Benchmark** | [`eval/runner.py`](eval/runner.py) | Automated 4-scenario benchmark runner |
+| **PRD Specification** | [`Dukaan_Growth_Worker_PRD_v2.md`](Dukaan_Growth_Worker_PRD_v2.md) | Complete Product Requirements Document v2.0 |
+| **TRD Specification** | [`Dukaan_Growth_Worker_TRD_v2.md`](Dukaan_Growth_Worker_TRD_v2.md) | Complete Technical Requirements Document v2.0 |
 
 ---
 
-## Repository Layout
+## 🛡️ Privacy & DPDP Guarantees
 
-```
-backend/           Python 3.13 FastAPI — modular monolith
-frontend/          Next.js 15 App Router — self-hosted PWA
-packages/          Signed data packs: rules, templates, policies
-eval/              Evaluation harness + history.csv
-tools/             Synthetic data generator, fleet simulator
-deploy/            Docker Compose profiles + Helm chart + portable script
-cloud/             Tier B: FastAPI cloud control plane
-docs/              PRD, TRD, ADRs, state diagram, privacy note, learning concept
-tests/             Unit, contract, chaos tests
-```
-
----
-
-## Privacy
-
-- Customer names and phone numbers **never leave the device**
-- Only banded aggregates (no amounts, no aliases) may sync to Eko **with explicit owner consent**
-- All analysis runs fully offline
-- AES-256-GCM encrypted customer vault
-
-See [docs/PRIVACY_DPDP_NOTE.md](docs/PRIVACY_DPDP_NOTE.md).
+1. **Zero-PII On Device:** Real customer names and phone numbers are stripped on ingestion and replaced with synthetic aliases (`CUST_001`).
+2. **Local-First Processing:** Financial calculations and rule evaluations occur 100% on the local machine.
+3. **Banded Consented Exports:** Only coarse categorical ranges (e.g. `revenue_band: 50K_150K`, `rules_fired: ["W1"]`) can sync to the cloud with explicit owner consent.
+4. **k-Anonymity ($k \ge 5$):** The cloud aggregation plane suppresses macro-cohort cells with fewer than 5 shops.
+5. **Right to Erasure:** A single-tap `DELETE /v1/data` endpoint purges all local databases immediately.
 
 ---
 
 ## Candidate
-
-**Anvaya Arsha** — Applied AI / Agentic AI / Forward-Deployed Engineering  
-Eko Evaluation Assignment · Oct 2026
+**Anvaya Arsha** — Applied AI / Agentic AI / Forward-Deployed Engineer  
+Eko Evaluation Assignment · October 2026

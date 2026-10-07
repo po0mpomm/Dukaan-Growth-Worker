@@ -1,0 +1,89 @@
+# =============================================================================
+# Dukaan Growth Worker — Docker Compose
+# Profiles:
+#   core  : Edge Monolith (FastAPI backend + Next.js frontend)
+#   cloud : Control Plane (Cloud API + PostgreSQL 16 + Valkey)
+# =============================================================================
+
+services:
+  # ── Edge Backend (FastAPI) ────────────────────────────────────────────────
+  backend:
+    profiles: ["core", "full"]
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: dukaan-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - DUKAAN_ENV=production
+      - DUKAAN_LLM_MODE=templates
+      - DUKAAN_DATA_DIR=/app/data
+    volumes:
+      - edge-data:/app/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/healthz')"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # ── Edge Frontend (Next.js 15) ─────────────────────────────────────────────
+  frontend:
+    profiles: ["core", "full"]
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: dukaan-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://backend:8000
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  # ── Cloud Plane API (FastAPI) ──────────────────────────────────────────────
+  cloud-api:
+    profiles: ["cloud"]
+    build:
+      context: .
+      dockerfile: cloud/Dockerfile
+    container_name: dukaan-cloud-api
+    ports:
+      - "8001:8001"
+    environment:
+      - DATABASE_URL=postgresql://dukaan:dukaan_pass@postgres:5432/dukaan_cloud
+    depends_on:
+      - postgres
+      - valkey
+    restart: unless-stopped
+
+  # ── Cloud PostgreSQL 16 ───────────────────────────────────────────────────
+  postgres:
+    profiles: ["cloud"]
+    image: postgres:16-alpine
+    container_name: dukaan-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=dukaan_cloud
+      - POSTGRES_USER=dukaan
+      - POSTGRES_PASSWORD=dukaan_pass
+    volumes:
+      - ./cloud/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+      - pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  # ── Cloud Valkey (BSD, Redis-compatible) ────────────────────────────────────
+  valkey:
+    profiles: ["cloud"]
+    image: valkey/valkey:8-alpine
+    container_name: dukaan-valkey
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+
+volumes:
+  edge-data:
+  pgdata:
