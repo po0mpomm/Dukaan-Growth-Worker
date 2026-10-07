@@ -108,6 +108,12 @@ export default function AuditPage() {
         <a href="/" className="btn btn-secondary">
           ← Back to Home
         </a>
+        <a href="/eval" className="btn btn-secondary">
+          📊 Evaluation & Benchmark
+        </a>
+        <a href="/privacy" className="btn btn-secondary">
+          🔒 Privacy & Cloud Sync
+        </a>
       </footer>
     </div>
   );

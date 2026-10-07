@@ -55,6 +55,7 @@ frontend/.vercel
 frontend/npm-debug.log*
 frontend/yarn-debug.log*
 frontend/yarn-error.log*
+*.tsbuildinfo
 
 # Logs
 *.log

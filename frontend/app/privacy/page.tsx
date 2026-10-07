@@ -69,6 +69,9 @@ export default function PrivacyPage() {
         <a href="/" className="btn btn-secondary">
           ← Back to Home
         </a>
+        <a href="/eval" className="btn btn-secondary">
+          📊 Evaluation & Benchmark
+        </a>
         <a href="/audit" className="btn btn-secondary">
           🛡️ {t.verifyAudit}
         </a>

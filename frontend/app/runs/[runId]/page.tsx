@@ -58,7 +58,16 @@ export default function RunResultPage({ params }: { params: Promise<{ runId: str
 
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = lang === "hi" ? "hi-IN" : "en-IN";
+    const targetLang = lang === "hi" ? "hi-IN" : "en-IN";
+    utterance.lang = targetLang;
+
+    // Prefer regional native voice if available
+    const voices = window.speechSynthesis.getVoices();
+    const regionalVoice = voices.find((v) => v.lang.startsWith(lang === "hi" ? "hi" : "en-IN"));
+    if (regionalVoice) {
+      utterance.voice = regionalVoice;
+    }
+
     utterance.onend = () => setSpeakingActionId(null);
     utterance.onerror = () => setSpeakingActionId(null);
 
@@ -82,15 +91,23 @@ export default function RunResultPage({ params }: { params: Promise<{ runId: str
     }
   };
 
-  const handleCopyDraft = (alias: string, amount?: number) => {
-    const draftText =
-      lang === "hi"
-        ? `नमस्ते ${alias} जी, दुकान से आपका पिछला बकाया ₹${amount || 0} है। कृपया इस सप्ताह हिसाब कर लें। धन्यवाद!`
-        : `Hello ${alias}, gentle reminder from the shop regarding your pending balance of ₹${amount || 0}. Please clear when convenient. Thank you!`;
+  const getDraftText = (alias: string, amount?: number) => {
+    return lang === "hi"
+      ? `नमस्ते ${alias} जी, दुकान से आपका पिछला बकाया ₹${amount || 0} है। कृपया इस सप्ताह हिसाब कर लें। धन्यवाद!`
+      : `Hello ${alias}, gentle reminder from the shop regarding your pending balance of ₹${amount || 0}. Please clear when convenient. Thank you!`;
+  };
 
+  const handleCopyDraft = (alias: string, amount?: number) => {
+    const draftText = getDraftText(alias, amount);
     navigator.clipboard.writeText(draftText);
     setCopiedCustomer(alias);
     setTimeout(() => setCopiedCustomer(null), 2500);
+  };
+
+  const handleOpenWhatsApp = (alias: string, amount?: number) => {
+    const draftText = getDraftText(alias, amount);
+    const url = `https://wa.me/?text=${encodeURIComponent(draftText)}`;
+    window.open(url, "_blank");
   };
 
   if (loading) {
@@ -250,13 +267,21 @@ export default function RunResultPage({ params }: { params: Promise<{ runId: str
                     ₹{f.outstanding_amount.toLocaleString("en-IN")}
                   </div>
                 )}
-                <button
-                  className="btn btn-sm btn-secondary"
-                  style={{ marginTop: "6px" }}
-                  onClick={() => handleCopyDraft(f.alias, f.outstanding_amount)}
-                >
-                  {copiedCustomer === f.alias ? `✓ ${t.copied}` : `📱 ${t.copyDraft}`}
-                </button>
+                <div style={{ display: "flex", gap: "6px", marginTop: "6px", justifyContent: "flex-end" }}>
+                  <button
+                    className="btn btn-sm btn-secondary"
+                    onClick={() => handleCopyDraft(f.alias, f.outstanding_amount)}
+                  >
+                    {copiedCustomer === f.alias ? `✓ ${t.copied}` : `📋 ${t.copyDraft}`}
+                  </button>
+                  <button
+                    className="btn btn-sm btn-primary"
+                    title="Open WhatsApp Draft"
+                    onClick={() => handleOpenWhatsApp(f.alias, f.outstanding_amount)}
+                  >
+                    💬 WhatsApp
+                  </button>
+                </div>
               </div>
             </div>
           ))}

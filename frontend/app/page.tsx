@@ -258,6 +258,9 @@ export default function HomePage() {
 
       {/* Footer Navigation */}
       <footer className="footer-nav">
+        <a href="/eval" style={{ color: "var(--text-muted)", textDecoration: "none" }}>
+          📊 Evaluation & Benchmark
+        </a>
         <a href="/privacy" style={{ color: "var(--text-muted)", textDecoration: "none" }}>
           🔒 {t.privacyExport}
         </a>
