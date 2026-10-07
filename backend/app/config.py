@@ -28,10 +28,12 @@ class Settings(BaseSettings):
     cors_origins: List[str] = ["http://localhost:3000", "http://127.0.0.1:3000"]
 
     # ── LLM Adapter (all optional — templates always work) ───────────────────
+    llm_mode: str = "auto"              # "auto", "templates", "ollama", "gemini"
     # Set GEMINI_API_KEY to enable Gemini free-tier fallback
     gemini_api_key: str = ""
-    # Set OLLAMA_URL if Ollama is running locally
+    # Set OLLAMA_URL / OLLAMA_HOST if Ollama is running locally
     ollama_url: str = "http://localhost:11434"
+    ollama_host: str = "http://localhost:11434"
     ollama_model: str = "llama3.2:1b"   # 1B model for 4 GB RAM constraint
     # LLM timeout: if exceeded, circuit breaker fires and templates are used
     llm_timeout_seconds: float = 25.0
