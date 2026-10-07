@@ -31,6 +31,10 @@ test:
 eval:
 	python eval/runner.py
 
+# ── Run end-to-end live smoke test ────────────────────────────────────────────
+smoke:
+	python tools/smoke_test.py
+
 # ── Type-check frontend ───────────────────────────────────────────────────────
 typecheck:
 	cd frontend && npm run build

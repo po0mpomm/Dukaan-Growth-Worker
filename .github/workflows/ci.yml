@@ -37,6 +37,11 @@ jobs:
         run: |
           python eval/runner.py
 
+      - name: Test Synthetic Data Tools
+        run: |
+          python tools/generate_synthetic_data.py --output-dir /tmp/test_synth --records 20
+          python tools/fleet_simulator.py --shops 5 --output-dir /tmp/test_fleet
+
   frontend-build:
     name: Frontend Lint & Production Build
     runs-on: ubuntu-latest
