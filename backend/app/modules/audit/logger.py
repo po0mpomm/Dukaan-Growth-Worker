@@ -1,12 +1,14 @@
 """
 SHA-256 Hash-Chained Audit Logger (TRD §7.1, §11)
 Maintains an immutable, append-only hash chain in audit.db.
+Ensures explicit connection closing for Windows file lock compatibility.
 """
 
 import hashlib
 import json
 import sqlite3
 import time
+import uuid
 from pathlib import Path
 from typing import Any, Dict, Optional
 import structlog
@@ -26,7 +28,8 @@ class AuditLogger:
         return conn
 
     def _ensure_table(self) -> None:
-        with self._get_connection() as conn:
+        conn = self._get_connection()
+        try:
             conn.execute(
                 """
                 CREATE TABLE IF NOT EXISTS audit_events (
@@ -42,27 +45,32 @@ class AuditLogger:
                 """
             )
             conn.commit()
+        finally:
+            conn.close()
 
     def _get_last_hash(self) -> str:
-        with self._get_connection() as conn:
+        conn = self._get_connection()
+        try:
             cursor = conn.cursor()
             cursor.execute("SELECT entry_hash FROM audit_events ORDER BY seq DESC LIMIT 1")
             row = cursor.fetchone()
             if row:
                 return row["entry_hash"]
             return "0" * 64
+        finally:
+            conn.close()
 
     def log_event(self, event_type: str, details: Dict[str, Any], run_id: Optional[str] = None) -> AuditEvent:
         prev_hash = self._get_last_hash()
         ts = time.time()
-        import uuid
         event_id = str(uuid.uuid4())
         details_str = json.dumps(details, sort_keys=True)
 
         payload_to_hash = f"{event_id}|{ts}|{event_type}|{run_id or ''}|{details_str}|{prev_hash}"
         entry_hash = hashlib.sha256(payload_to_hash.encode("utf-8")).hexdigest()
 
-        with self._get_connection() as conn:
+        conn = self._get_connection()
+        try:
             cursor = conn.cursor()
             cursor.execute(
                 """
@@ -73,6 +81,8 @@ class AuditLogger:
             )
             seq = cursor.lastrowid
             conn.commit()
+        finally:
+            conn.close()
 
         event = AuditEvent(
             seq=seq,
@@ -88,16 +98,19 @@ class AuditLogger:
 
     def verify_integrity(self) -> Dict[str, Any]:
         """Recomputes entire hash chain to verify zero tampering."""
-        with self._get_connection() as conn:
+        conn = self._get_connection()
+        try:
             cursor = conn.cursor()
             cursor.execute("SELECT * FROM audit_events ORDER BY seq ASC")
             rows = cursor.fetchall()
+        finally:
+            conn.close()
 
         if not rows:
             return {"valid": True, "count": 0, "message": "Audit chain empty."}
 
         expected_prev = "0" * 64
-        for idx, row in enumerate(rows):
+        for row in rows:
             if row["prev_hash"] != expected_prev:
                 return {
                     "valid": False,
