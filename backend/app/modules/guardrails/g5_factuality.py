@@ -90,9 +90,8 @@ def verify_factuality(
             if num not in allowed and round(num) not in allowed and num not in (2.0, 5.0, 7.0, 10.0):
                 # Hallucination detected! Fall back to template
                 from app.modules.llm_adapter.template_adapter import TemplatePhrasingAdapter
-                import asyncio
                 adapter = TemplatePhrasingAdapter()
-                fallback = asyncio.run(adapter.phrase_findings(findings, findings.language))
+                fallback = adapter.phrase_sync(findings, findings.language)
                 return fallback.actions, "template"
 
     return actions, source

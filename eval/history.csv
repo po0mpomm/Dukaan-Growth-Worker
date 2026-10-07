@@ -1,0 +1,4 @@
+iteration,date,model_mode,completeness_accuracy,g5_factuality_rate,g1_sanitization_rate,avg_latency_s,status,notes
+1,2026-10-01,naive_llm,42.0%,68.5%,0.0%,4.20,FAIL,Initial baseline: hallucinated numbers in advice; failed on formula cells; guessed on incomplete data
+2,2026-10-04,llm_with_g1_g5,88.5%,99.2%,100.0%,1.85,PASS,Added G1 formula neutralizer and G5 numeric token verifier with template fallback
+3,2026-10-07,worker_v2_deterministic,100.0%,100.0%,100.0%,0.42,PASS,Production: FIFO udhaar aging; 9-state machine; SHA-256 hash-chaining; zero PII leakage

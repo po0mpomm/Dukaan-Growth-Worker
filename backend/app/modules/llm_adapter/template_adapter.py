@@ -18,7 +18,7 @@ class TemplatePhrasingAdapter(PhrasingAdapter):
     async def is_available(self) -> bool:
         return True
 
-    async def phrase_findings(
+    def phrase_sync(
         self,
         findings: FindingsObject,
         language: str = "en"
@@ -36,12 +36,16 @@ class TemplatePhrasingAdapter(PhrasingAdapter):
             
             actions.append(
                 ActionItem(
+                    n=idx + 1,
                     action_id=f"act_{idx+1}",
-                    title=tmpl["title"] if tmpl else wa.title,
+                    title=tmpl["title"] if tmpl else (wa.title or "Action Item"),
                     description=action_text,
                     first_step=first_step,
                     rationale=wa.evidence or "Derived from monthly business activity review.",
-                    estimated_impact="Improves operating cash flow and working capital efficiency."
+                    estimated_impact="Improves operating cash flow and working capital efficiency.",
+                    language="hi" if language == "hi" else "en",
+                    source="template",
+                    rule_id=wa.rule_id,
                 )
             )
 
@@ -53,12 +57,16 @@ class TemplatePhrasingAdapter(PhrasingAdapter):
             tmpl = templates[rule_id]
             actions.append(
                 ActionItem(
+                    n=len(actions) + 1,
                     action_id=f"act_{len(actions)+1}",
                     title=tmpl["title"],
                     description=tmpl["action"],
                     first_step=tmpl["first_step"],
                     rationale="Standard retail optimization guideline for steady monthly growth.",
-                    estimated_impact="Consistent business health discipline."
+                    estimated_impact="Consistent business health discipline.",
+                    language="hi" if language == "hi" else "en",
+                    source="template",
+                    rule_id=rule_id,
                 )
             )
             d_idx += 1
@@ -76,3 +84,10 @@ class TemplatePhrasingAdapter(PhrasingAdapter):
                 f"Generated {len(actions)} high-priority action items for monthly growth."
             )
         )
+
+    async def phrase_findings(
+        self,
+        findings: FindingsObject,
+        language: str = "en"
+    ) -> ModelOutput:
+        return self.phrase_sync(findings, language)

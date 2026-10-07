@@ -22,10 +22,8 @@ def check_content(
             if term in combined:
                 # Fallback to safe template
                 from app.modules.llm_adapter.template_adapter import TemplatePhrasingAdapter
-                import asyncio
                 adapter = TemplatePhrasingAdapter()
-                # synchronous fallback creation
-                fallback_output = asyncio.run(adapter.phrase_findings(findings, findings.language))
+                fallback_output = adapter.phrase_sync(findings, findings.language)
                 return fallback_output.actions, "template"
 
     return actions, source
