@@ -207,7 +207,7 @@ class WorkflowEngine:
                 has_caveat=(completeness.outcome == ValidationOutcome.PROCEED_WITH_CAVEAT),
                 caveat_en=caveat_en,
                 caveat_hi=caveat_hi,
-                model_used=model_used,
+                model_used=(model_used == "model"),
             )
 
             # ── S6: Save snapshot ────────────────────────────────────────────

@@ -11,7 +11,7 @@ PRD §9    — WorkflowState: state machine states.
 from __future__ import annotations
 
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Dict, List, Literal, Optional
 
@@ -153,7 +153,7 @@ class ResultObject(BaseModel):
     caveat_en: Optional[str] = None
     caveat_hi: Optional[str] = None
     model_used: bool = False
-    created_at: str = Field(default_factory=lambda: datetime.utcnow().isoformat())
+    created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     metrics: Optional[Dict[str, Any]] = None
 
     @property
