@@ -142,10 +142,27 @@ export default function RunResultPage({ params }: { params: Promise<{ runId: str
             {result.month} • {lang === "hi" ? "मासिक रिपोर्ट" : "Monthly Review"}
           </p>
         </div>
-        <button className="lang-toggle" onClick={handleLangToggle}>
-          🌐 {lang === "en" ? "हिंदी" : "English"}
-        </button>
+        <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+          <button
+            className="btn btn-sm btn-secondary no-print"
+            onClick={() => window.print()}
+            title="Print or Save PDF"
+          >
+            🖨️ {lang === "hi" ? "प्रिंट / PDF" : "Print Report"}
+          </button>
+          <button className="lang-toggle" onClick={handleLangToggle}>
+            🌐 {lang === "en" ? "हिंदी" : "English"}
+          </button>
+        </div>
       </header>
+
+      {/* Print-only physical ledger banner */}
+      <div className="print-only" style={{ marginBottom: "16px", borderBottom: "2px solid #000", paddingBottom: "8px" }}>
+        <h2 style={{ margin: 0, fontSize: "1.4rem" }}>दुकान ग्रोथ वर्कर (Dukaan Growth Worker) — Monthly Review</h2>
+        <p style={{ margin: "4px 0 0 0", fontSize: "0.85rem", color: "#333" }}>
+          Month: <strong>{result.month}</strong> | Run ID: <code>{runId}</code> | Generated: {new Date().toLocaleDateString("en-IN")}
+        </p>
+      </div>
 
       {/* Caveat Banner if applicable */}
       {result.has_caveat && (
@@ -310,6 +327,9 @@ export default function RunResultPage({ params }: { params: Promise<{ runId: str
       <footer className="footer-nav">
         <a href="/" className="btn btn-secondary">
           ← {t.reupload}
+        </a>
+        <a href="/presentation" className="btn btn-secondary">
+          📽️ {lang === "hi" ? "प्रेजेंटेशन" : "Presentation"}
         </a>
         <a href="/privacy" className="btn btn-primary">
           🔒 {t.privacyExport}

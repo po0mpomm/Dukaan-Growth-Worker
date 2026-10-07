@@ -169,6 +169,9 @@ export default function EvalPage() {
         <a href="/" className="btn btn-secondary">
           ← Back to Home
         </a>
+        <a href="/presentation" className="btn btn-secondary">
+          📽️ Presentation
+        </a>
         <a href="/audit" className="btn btn-secondary">
           🛡️ {t.verifyAudit}
         </a>
