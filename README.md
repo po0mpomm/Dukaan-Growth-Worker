@@ -109,17 +109,35 @@ All mandated deliverable items from the Eko assignment email are documented and 
 | **Architecture Decision Records** | [`docs/ADR.md`](docs/ADR.md) | ADR 001 to ADR 012 detailing design trade-offs |
 | **Sample Inputs & Outputs** | [`docs/SAMPLE_INPUTS_OUTPUTS.md`](docs/SAMPLE_INPUTS_OUTPUTS.md) | Sample CSVs and verified `ResultObject` JSON payloads |
 | **Privacy & DPDP Approach** | [`docs/PRIVACY_APPROACH.md`](docs/PRIVACY_APPROACH.md) | Architectural zero-PII guarantees, right to erasure, SHA-256 hash chains |
-| **Evaluation History** | [`eval/history.csv`](eval/history.csv) | Empirical progression across 3 iterations |
+| **Demo Walkthrough Script** | [`docs/DEMO_SCRIPT.md`](docs/DEMO_SCRIPT.md) | 6-minute recorded video demonstration narrative & timing |
+| **Evaluation History** | [`eval/history.csv`](eval/history.csv) | Empirical progression across 3 iterations (100% pass rate in 0.28s) |
 | **Evaluation Benchmark** | [`eval/runner.py`](eval/runner.py) | Automated 4-scenario benchmark runner |
+| **Synthetic Data Generator** | [`tools/generate_synthetic_data.py`](tools/generate_synthetic_data.py) | CLI generator for realistic Indian kirana transaction datasets |
+| **Fleet Simulator** | [`tools/fleet_simulator.py`](tools/fleet_simulator.py) | 50-100 store network distribution simulator |
+| **Automated CI Workflow** | [`.github/workflows/ci.yml`](.github/workflows/ci.yml) | GitHub Actions CI for backend, cloud, eval runner, and Next.js build |
 | **PRD Specification** | [`Dukaan_Growth_Worker_PRD_v2.md`](Dukaan_Growth_Worker_PRD_v2.md) | Complete Product Requirements Document v2.0 |
 | **TRD Specification** | [`Dukaan_Growth_Worker_TRD_v2.md`](Dukaan_Growth_Worker_TRD_v2.md) | Complete Technical Requirements Document v2.0 |
+
+---
+
+## 🖥️ Interactive Web Application Routes
+
+| Route | Purpose | Features |
+|:---|:---|:---|
+| `/` | **Home & Ingestion** | 1-click synthetic presets (Meena's Shop, Missing Data, Margin Erosion, Udhaar Risk), bilingual toggle, file upload |
+| `/runs/:runId` | **Monthly Business Review** | Verdict, W1–W7 weak areas, action checkboxes, WhatsApp drafts, 🖨️ physical print/PDF report |
+| `/runs/:runId/escalated` | **Human Escalation** | Incomplete data diagnosis, missing date breakdown, manual review checklist |
+| `/presentation` | **Interactive Pitch Deck** | 8-slide presentation deck with keyboard arrows, progress bar, and English/Hindi bullets |
+| `/eval` | **In-Browser Benchmark** | Live benchmark scorecards, latency metrics, and G1–G9 guardrail status |
+| `/privacy` | **Privacy & DPDP Center** | Local-first assurance, SHA-256 banded cloud export preview, single-tap right-to-erasure |
+| `/audit` | **Cryptographic Audit Chain** | SHA-256 tamper-evident log inspector and hash chain verifier |
 
 ---
 
 ## 🛡️ Privacy & DPDP Guarantees
 
 1. **Zero-PII On Device:** Real customer names and phone numbers are stripped on ingestion and replaced with synthetic aliases (`CUST_001`).
-2. **Local-First Processing:** Financial calculations and rule evaluations occur 100% on the local machine.
+2. **Local-First Processing:** Financial calculations and rule evaluations occur 100% on the local machine (4 GB RAM target).
 3. **Banded Consented Exports:** Only coarse categorical ranges (e.g. `revenue_band: 50K_150K`, `rules_fired: ["W1"]`) can sync to the cloud with explicit owner consent.
 4. **k-Anonymity ($k \ge 5$):** The cloud aggregation plane suppresses macro-cohort cells with fewer than 5 shops.
 5. **Right to Erasure:** A single-tap `DELETE /v1/data` endpoint purges all local databases immediately.
@@ -129,3 +147,4 @@ All mandated deliverable items from the Eko assignment email are documented and 
 ## Candidate
 **Anvaya Arsha** — Applied AI / Agentic AI / Forward-Deployed Engineer  
 Eko Evaluation Assignment · October 2026
+
