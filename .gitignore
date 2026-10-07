@@ -1,0 +1,95 @@
+# =============================================================================
+# Dukaan Growth Worker — .gitignore
+# =============================================================================
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+eggs/
+parts/
+var/
+sdist/
+develop-eggs/
+.installed.cfg
+lib64/
+.eggs/
+*.pyo
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+.env.local
+
+# Environment files (NEVER commit secrets)
+.env
+.env.production
+.env.*.local
+*.env
+
+# SQLite databases (local data — never commit real shop data)
+*.db
+*.sqlite
+*.sqlite3
+data/
+
+# Model files (too large for git; download separately)
+*.gguf
+*.bin
+*.safetensors
+models/
+
+# Next.js
+frontend/.next/
+frontend/out/
+frontend/node_modules/
+frontend/.vercel
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*.suo
+*.user
+*.workspace
+
+# Test output
+.coverage
+htmlcov/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Docker
+.dockerignore
+
+# Eval history — DO commit this (it's the learning record)
+# eval/history.csv  <- intentionally NOT in gitignore
+
+# Sensitive local keys (if generated locally)
+*.pem
+*.key
+*.p12
+*.pfx
+mkcert/

@@ -1,0 +1,4 @@
+date,category,amount,payment_mode,notes
+2026-09-02,STOCK,3500.0,BANK,Restock
+2026-09-10,ELECTRICITY,950.0,UPI,Electric bill
+2026-09-15,TRANSPORT,400.0,CASH,Tempo freight

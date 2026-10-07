@@ -1,0 +1,48 @@
+# =============================================================================
+# Dukaan Growth Worker — Backend Requirements (pinned)
+# Python 3.13 | All free/open-source
+# =============================================================================
+
+# --- API Framework ---
+fastapi==0.115.5
+uvicorn[standard]==0.32.1
+python-multipart==0.0.18         # For file upload (multipart/form-data)
+
+# --- Data Validation ---
+pydantic==2.10.3
+pydantic-settings==2.7.0
+
+# --- Data Analytics ---
+pandas==2.2.3
+numpy==2.2.1
+openpyxl==3.1.5                  # Excel .xlsx parsing
+
+# --- Cryptography (vault, hash chain, signatures) ---
+cryptography==44.0.0             # AES-256-GCM, Ed25519, Argon2id
+
+# --- State Machine / Orchestration ---
+langgraph==0.2.60
+langchain-core==0.3.28           # Required by LangGraph internals
+
+# --- LLM Adapters (all optional — templates always work) ---
+google-generativeai==0.8.3       # Gemini free tier (60 req/min)
+httpx==0.28.1                    # Async HTTP client for Ollama
+
+# --- YAML (rule packs, templates, policies) ---
+pyyaml==6.0.2
+
+# --- Testing ---
+pytest==8.3.4
+pytest-cov==6.0.0
+pytest-asyncio==0.24.0
+httpx==0.28.1                    # Also used in tests for TestClient
+hypothesis==6.123.1              # Property-based tests
+
+# --- Linting / Type checking ---
+ruff==0.8.6
+mypy==1.14.0
+bandit==1.8.0
+
+# --- Utilities ---
+python-dotenv==1.0.1
+structlog==24.4.0                # Structured JSON logging

@@ -1,0 +1,7 @@
+date,category,amount,payment_mode,notes
+2026-09-02,STOCK,4500.0,BANK,Rice and Dal refill
+2026-09-08,ELECTRICITY,1200.0,UPI,Shop meter bill
+2026-09-12,TRANSPORT,650.0,CASH,Tempo freight from mandi
+2026-09-16,STOCK,6800.0,BANK,Oil and Spices wholesale
+2026-09-22,PACKAGING,450.0,CASH,Paper bags and pouches
+2026-09-27,STOCK,3500.0,BANK,Snacks and Biscuits

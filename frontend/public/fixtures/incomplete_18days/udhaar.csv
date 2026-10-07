@@ -1,0 +1,4 @@
+customer_ref,opening_balance,credit_taken,repaid_amount,last_payment_date
+CUST_001,400.0,0.0,200.0,2026-09-10
+CUST_002,600.0,0.0,300.0,2026-09-12
+CUST_003,300.0,0.0,150.0,2026-09-14
