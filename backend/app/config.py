@@ -24,8 +24,9 @@ class Settings(BaseSettings):
     packages_dir: Path = Path("../packages")
 
     # ── Server ───────────────────────────────────────────────────────────────
-    debug: bool = True
+    debug: bool = False
     cors_origins: List[str] = ["http://localhost:3000", "http://127.0.0.1:3000"]
+    max_upload_size_mb: int = 10
 
     # ── LLM Adapter (all optional — templates always work) ───────────────────
     llm_mode: str = "auto"              # "auto", "templates", "ollama", "gemini"
@@ -50,6 +51,9 @@ class Settings(BaseSettings):
     completeness_caveat_threshold: float = 0.8  # 0.6–0.8 → proceed with caveat
     day_coverage_block: float = 0.70            # Below 70% → BLOCK
     day_coverage_warn: float = 0.85             # 70–85% → WARN
+    min_unique_customers: int = 15              # W6 customer inactivity threshold
+    min_monthly_sales_target: float = 25000.0   # W2 sales target benchmark (₹)
+    min_gross_margin_pct: float = 15.0          # W5 thin gross margin threshold (%)
 
     # ── Outbox (cloud sync) ───────────────────────────────────────────────────
     cloud_api_url: str = "http://localhost:9000/v1/aggregates"

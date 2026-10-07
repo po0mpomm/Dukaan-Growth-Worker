@@ -94,5 +94,17 @@ async def export_consent(
         notice_version=notice_version,
     )
 
+    # Log to tamper-evident audit trail
+    from app.modules.audit.logger import get_audit_logger
+    audit_logger = get_audit_logger(settings.data_dir)
+    try:
+        audit_logger.log_event(
+            event_type="EXPORT_CONSENT_GRANTED",
+            details={"outbox_id": outbox_id, "notice_version": notice_version, "payload_hash": expected_hash[:16]},
+            run_id=run_id,
+        )
+    except Exception:
+        pass
+
     log.info("export_consented_queued", run_id=run_id, outbox_id=outbox_id)
     return {"status": "queued", "outbox_id": outbox_id, "message_en": "Your data will sync when online."}

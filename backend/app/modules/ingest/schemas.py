@@ -81,3 +81,9 @@ UDHAAR_COLUMN_ALIASES: Dict[str, str] = {
     "last_payment_date": "last_payment_date",
     "अंतिम भुगतान": "last_payment_date",
 }
+
+# Pre-compiled normalized alias lookup maps for O(1) hash resolution (DSA-6)
+SALES_ALIAS_MAP: Dict[str, str] = {k.strip().lower(): v for k, v in SALES_COLUMN_ALIASES.items()}
+EXPENSES_ALIAS_MAP: Dict[str, str] = {k.strip().lower(): v for k, v in EXPENSES_COLUMN_ALIASES.items()}
+UDHAAR_ALIAS_MAP: Dict[str, str] = {k.strip().lower(): v for k, v in UDHAAR_COLUMN_ALIASES.items()}
+

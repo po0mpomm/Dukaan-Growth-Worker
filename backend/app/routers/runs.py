@@ -37,10 +37,22 @@ async def create_run(
     """
     run_id = str(uuid.uuid4())
 
-    # Read file bytes
+    # BUG 7: File upload size limit (DoS protection)
+    max_bytes = settings.max_upload_size_mb * 1024 * 1024
+
     sales_bytes = await sales_file.read()
     expenses_bytes = await expenses_file.read()
     udhaar_bytes = await udhaar_file.read()
+
+    if (
+        len(sales_bytes) > max_bytes
+        or len(expenses_bytes) > max_bytes
+        or len(udhaar_bytes) > max_bytes
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            detail=f"Uploaded file exceeds {settings.max_upload_size_mb}MB limit.",
+        )
 
     # Initialize run status
     _runs[run_id] = RunStatus(
@@ -51,8 +63,20 @@ async def create_run(
         message_hi="फ़ाइलें मिल गईं। सत्यापन शुरू हो रहा है...",
     )
 
+    # BUG 1: Wire audit_logger and record run initiation
+    from app.modules.audit.logger import get_audit_logger
+    audit_logger = get_audit_logger(settings.data_dir)
+    try:
+        audit_logger.log_event(
+            event_type="RUN_CREATED",
+            details={"month": month, "language": language},
+            run_id=run_id,
+        )
+    except Exception as exc:
+        log.warning("audit_log_failed", error=str(exc), run_id=run_id)
+
     # Launch workflow in background
-    engine = WorkflowEngine(settings=settings, run_store=_runs)
+    engine = WorkflowEngine(settings=settings, run_store=_runs, audit_logger=audit_logger)
     background_tasks.add_task(
         engine.execute,
         run_id=run_id,
@@ -102,7 +126,11 @@ async def get_run_result(run_id: str) -> dict:
 
 
 @router.post("/runs/{run_id}/actions/{action_n}/done")
-async def mark_action_done(run_id: str, action_n: int) -> dict:
+async def mark_action_done(
+    run_id: str,
+    action_n: int,
+    settings: Settings = Depends(get_settings),
+) -> dict:
     """
     Owner marks an action as done. Stored in analytics.db for MoM tracking.
 
@@ -117,6 +145,32 @@ async def mark_action_done(run_id: str, action_n: int) -> dict:
     for action in run.result.actions:
         if action.n == action_n:
             action.done = True
+
+            # Log audit event
+            from app.modules.audit.logger import get_audit_logger
+            audit_logger = get_audit_logger(settings.data_dir)
+            try:
+                audit_logger.log_event(
+                    event_type="ACTION_DONE",
+                    details={"action_n": action_n, "title": action.title},
+                    run_id=run_id,
+                )
+            except Exception:
+                pass
+
+            # Update snapshots database for MoM tracking (BUG 4)
+            try:
+                from app.db.base import get_connection
+                conn = get_connection(settings.data_dir / "analytics.db")
+                conn.execute(
+                    "UPDATE snapshots SET actions_done = actions_done + 1 WHERE month = ?",
+                    (run.result.month,),
+                )
+                conn.commit()
+                conn.close()
+            except Exception:
+                pass
+
             log.info("action_marked_done", run_id=run_id, action_n=action_n)
             return {"status": "ok", "action_n": action_n}
 

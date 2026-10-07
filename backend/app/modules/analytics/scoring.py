@@ -67,11 +67,13 @@ def rank_followups(parsed: ParsedData, metrics: Dict[str, Any]) -> List[FollowUp
             "is_lapsed_regular": rec.days_overdue >= 45,
         })
 
-    # Sort descending by priority score
-    candidates.sort(key=lambda c: c["score"], reverse=True)
+    # DSA-2: Priority queue top-K extraction with heap (heapq.nlargest)
+    # O(N log K) time and O(K) space instead of O(N log N) full sorting
+    import heapq
+    top_candidates = heapq.nlargest(5, candidates, key=lambda c: c["score"])
 
     result: List[FollowUp] = []
-    for idx, c in enumerate(candidates[:5]):
+    for idx, c in enumerate(top_candidates):
         result.append(
             FollowUp(
                 rank=idx + 1,

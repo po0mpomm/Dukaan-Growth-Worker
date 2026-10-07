@@ -88,8 +88,29 @@ def detect_weak_areas(metrics: Dict[str, Any], settings: Settings) -> List[WeakA
             )
         )
 
+    # W5: Supplier Price Increase / Margin Decay (PRD §8.3)
+    gross_margin_pct = metrics.get("gross_margin_pct", 25.0)
+    stock_expenses = metrics.get("stock_expenses", 0.0)
+    min_gross_margin = getattr(settings, "min_gross_margin_pct", 15.0)
+    if gross_margin_pct < min_gross_margin and total_sales > 0 and stock_expenses > 0:
+        margin_gap = max(0.0, (20.0 - gross_margin_pct) / 100.0) * total_sales
+        detected.append(
+            WeakArea(
+                rule_id="W5",
+                title_en="Supplier Margin Decay / Low Gross Margin",
+                title_hi="सप्लायर लागत वृद्धि और घटता मुनाफा",
+                title="Supplier Margin Decay / Low Gross Margin",
+                metrics={"gross_margin_pct": gross_margin_pct, "stock_expenses": stock_expenses},
+                rupee_impact=float(round(margin_gap, 2)) if margin_gap > 0 else 3200.0,
+                evidence=f"Gross margin is thin at {gross_margin_pct}% (Stock purchase ₹{stock_expenses:,.0f} vs Sales ₹{total_sales:,.0f}).",
+                recommended_action="Negotiate volume discounts with wholesale suppliers or review category pricing.",
+                rank=5,
+            )
+        )
+
     # W6: Customer Inactivity / Footfall Drop
-    if unique_customers < 15:
+    min_cust = getattr(settings, "min_unique_customers", 15)
+    if unique_customers < min_cust:
         detected.append(
             WeakArea(
                 rule_id="W6",
@@ -100,13 +121,14 @@ def detect_weak_areas(metrics: Dict[str, Any], settings: Settings) -> List[WeakA
                 rupee_impact=4000.0,
                 evidence=f"Only {unique_customers} distinct purchasing customers recorded this month.",
                 recommended_action="Send personalized WhatsApp greetings to inactive regular customers.",
-                rank=5,
+                rank=6,
             )
         )
 
     # W2: Slow-Moving Stock
-    if total_sales < 25000.0:
-        gap = max(0.0, 30000.0 - total_sales)
+    min_sales = getattr(settings, "min_monthly_sales_target", 25000.0)
+    if total_sales < min_sales:
+        gap = max(0.0, (min_sales + 5000.0) - total_sales)
         detected.append(
             WeakArea(
                 rule_id="W2",
@@ -117,15 +139,16 @@ def detect_weak_areas(metrics: Dict[str, Any], settings: Settings) -> List[WeakA
                 rupee_impact=float(gap),
                 evidence=f"Total monthly revenue of ₹{total_sales:,.0f} shows room for inventory turnover improvements.",
                 recommended_action="Bundle slow-moving items with high-velocity staples at a small combo discount.",
-                rank=6,
+                rank=7,
             )
         )
 
-    # Sort strictly by rupee_impact descending
-    detected.sort(key=lambda w: w.rupee_impact, reverse=True)
+    # DSA-1: Priority ranking via min-heap selection (heapq.nlargest)
+    import heapq
+    ranked = heapq.nlargest(len(detected), detected, key=lambda w: w.rupee_impact)
 
     # Update rank 1..N
-    for i, w in enumerate(detected):
+    for i, w in enumerate(ranked):
         w.rank = i + 1
 
-    return detected
+    return ranked

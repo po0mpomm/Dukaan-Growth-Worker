@@ -19,7 +19,7 @@ Each node:
 import asyncio
 import traceback
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 import structlog
 
@@ -33,6 +33,7 @@ from app.contracts import (
     ValidationOutcome,
     WorkflowState,
 )
+from app.modules.audit.logger import AuditLogger, get_audit_logger
 
 log = structlog.get_logger(__name__)
 
@@ -58,9 +59,15 @@ class WorkflowEngine:
     Designed to be swapped for LangGraph in Phase 4 without changing any other module.
     """
 
-    def __init__(self, settings: Settings, run_store: dict[str, RunStatus]) -> None:
+    def __init__(
+        self,
+        settings: Settings,
+        run_store: dict[str, RunStatus],
+        audit_logger: Optional[AuditLogger] = None,
+    ) -> None:
         self.settings = settings
         self.run_store = run_store
+        self.audit_logger = audit_logger or get_audit_logger(settings.data_dir)
 
     def _update_state(
         self,
@@ -80,6 +87,20 @@ class WorkflowEngine:
                 run.message_hi = message_hi
             for k, v in kwargs.items():
                 setattr(run, k, v)
+
+        # BUG 1: Immutable SHA-256 audit log state transition
+        if self.audit_logger:
+            try:
+                self.audit_logger.log_event(
+                    event_type=f"STATE_{state.value}",
+                    details={
+                        "progress_pct": STATE_PROGRESS.get(state, 0),
+                        "message_en": message_en,
+                    },
+                    run_id=run_id,
+                )
+            except Exception as exc:
+                log.warning("audit_log_failed", error=str(exc), run_id=run_id)
 
     async def execute(
         self,
@@ -142,6 +163,7 @@ class WorkflowEngine:
                 timeout=10.0,
             )
             weak_areas = detect_weak_areas(metrics, self.settings)
+            metrics["weak_areas"] = weak_areas
             followups = rank_followups(parsed, metrics)
             mom = compute_mom(metrics, month, self.settings.data_dir)
 
@@ -193,6 +215,19 @@ class WorkflowEngine:
                 caveat_en = "Note: some data was incomplete. Results may not be fully accurate."
                 caveat_hi = "नोट: कुछ डेटा अधूरा था। परिणाम पूरी तरह सटीक नहीं हो सकते।"
 
+            # Build JSON-serializable metrics dict (BUG 2)
+            serializable_metrics = {}
+            for k, v in metrics.items():
+                if k == "aging_records" and isinstance(v, dict):
+                    serializable_metrics[k] = {
+                        alias: rec.__dict__ if hasattr(rec, "__dict__") else rec
+                        for alias, rec in v.items()
+                    }
+                elif k == "weak_areas":
+                    serializable_metrics[k] = [w.rule_id for w in v]
+                else:
+                    serializable_metrics[k] = v
+
             result = ResultObject(
                 run_id=run_id,
                 month=month,
@@ -208,6 +243,7 @@ class WorkflowEngine:
                 caveat_en=caveat_en,
                 caveat_hi=caveat_hi,
                 model_used=(model_used == "model"),
+                metrics=serializable_metrics,
             )
 
             # ── S6: Save snapshot ────────────────────────────────────────────
@@ -227,6 +263,16 @@ class WorkflowEngine:
                 message_hi="विश्लेषण पूर्ण।",
                 result=result,
             )
+            if self.audit_logger:
+                try:
+                    self.audit_logger.log_event(
+                        event_type="RUN_COMPLETED",
+                        details={"weak_areas": [w.rule_id for w in weak_areas], "month": month},
+                        run_id=run_id,
+                    )
+                except Exception as exc:
+                    log.warning("audit_log_failed", error=str(exc), run_id=run_id)
+
             log.info("run_completed", run_id=run_id, weak_areas=[w.rule_id for w in weak_areas])
 
         except asyncio.TimeoutError:
@@ -237,6 +283,11 @@ class WorkflowEngine:
                 message_hi="एक चरण में बहुत समय लगा। कृपया फिर से प्रयास करें।",
                 error_message="Timeout",
             )
+            if self.audit_logger:
+                try:
+                    self.audit_logger.log_event("RUN_TIMEOUT", {"error": "Timeout"}, run_id=run_id)
+                except Exception:
+                    pass
         except Exception as exc:
             log.error("run_error", run_id=run_id, error=str(exc), tb=traceback.format_exc())
             self._update_state(
@@ -245,6 +296,11 @@ class WorkflowEngine:
                 message_hi="कुछ गलत हो गया। कोई आंशिक परिणाम नहीं दिखाया गया है।",
                 error_message=str(exc),
             )
+            if self.audit_logger:
+                try:
+                    self.audit_logger.log_event("RUN_ERROR", {"error": str(exc)}, run_id=run_id)
+                except Exception:
+                    pass
 
     def _escalate(
         self,
@@ -288,6 +344,15 @@ class WorkflowEngine:
             message_hi=reason_hi,
             escalation=escalation,
         )
+        if self.audit_logger:
+            try:
+                self.audit_logger.log_event(
+                    event_type="RUN_ESCALATED",
+                    details={"reason_code": reason_code, "reason_en": reason_en},
+                    run_id=run_id,
+                )
+            except Exception:
+                pass
         log.warning("run_escalated", run_id=run_id, reason_code=reason_code)
 
 

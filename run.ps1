@@ -11,7 +11,7 @@ $WorkspaceRoot = $PSScriptRoot
 
 # 1. Start Backend
 Write-Host "[1/2] Starting FastAPI Backend on http://127.0.0.1:8000 ..." -ForegroundColor Yellow
-$BackendProc = Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd '$WorkspaceRoot\backend'; uvicorn app.main:create_app --factory --host 127.0.0.1 --port 8000 --reload" -PassThru
+$BackendProc = Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd '$WorkspaceRoot\backend'; `$env:DEBUG = 'true'; uvicorn app.main:create_app --factory --host 127.0.0.1 --port 8000 --reload" -PassThru
 
 # 2. Start Frontend
 Write-Host "[2/2] Starting Next.js Frontend on http://localhost:3000 ..." -ForegroundColor Yellow

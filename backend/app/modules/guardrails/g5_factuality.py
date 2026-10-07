@@ -41,7 +41,8 @@ def extract_numbers(text: str) -> Set[float]:
 
 def extract_allowed_numbers(findings: FindingsObject) -> Set[float]:
     """Extracts all verified numeric values from the findings object."""
-    allowed: Set[float] = {1.0, 2.0, 3.0, 5.0, 10.0, 15.0, 30.0, 60.0}  # Common indices/percentages
+    # Base sentinels: action indices 1..3 and percentage baseline 100
+    allowed: Set[float] = {1.0, 2.0, 3.0, 100.0}
 
     for wa in findings.weak_areas:
         allowed.add(float(wa.rank))
@@ -51,6 +52,8 @@ def extract_allowed_numbers(findings: FindingsObject) -> Set[float]:
                 allowed.add(float(v))
         if wa.evidence:
             allowed.update(extract_numbers(wa.evidence))
+        if wa.recommended_action:
+            allowed.update(extract_numbers(wa.recommended_action))
 
     for f in findings.followups:
         allowed.add(float(f.rank))
@@ -60,8 +63,15 @@ def extract_allowed_numbers(findings: FindingsObject) -> Set[float]:
         if f.days_overdue is not None:
             allowed.add(float(f.days_overdue))
 
-    if findings.comparison and findings.comparison.sales_change_pct is not None:
-        allowed.add(float(findings.comparison.sales_change_pct))
+    if findings.comparison:
+        if findings.comparison.sales_change_pct is not None:
+            allowed.add(float(findings.comparison.sales_change_pct))
+        if findings.comparison.credit_share_change_pct is not None:
+            allowed.add(float(findings.comparison.credit_share_change_pct))
+        if findings.comparison.overdue_change_pct is not None:
+            allowed.add(float(findings.comparison.overdue_change_pct))
+        allowed.add(float(findings.comparison.actions_completed))
+        allowed.add(float(findings.comparison.actions_total))
 
     return allowed
 
@@ -73,21 +83,23 @@ def verify_factuality(
 ) -> Tuple[List[ActionItem], str]:
     """
     Verifies all numbers in actions against findings.
-    If hallucination detected -> falls back to template.
+    Uses immutable frozenset for O(1) lookup (DSA-3).
+    If hallucination detected -> falls back to deterministic template.
     """
     if source == "template":
         return actions, "template"
 
-    allowed = extract_allowed_numbers(findings)
+    allowed_set = extract_allowed_numbers(findings)
+    # DSA-3: Immutable frozenset for guaranteed O(1) membership check
+    allowed_frozen: frozenset[float] = frozenset(allowed_set)
 
     for act in actions:
         combined_text = f"{act.title} {act.description or ''} {act.why or ''} {act.first_step}"
         numbers_found = extract_numbers(combined_text)
 
-        # Allow small percentage numbers like 2% discount
         for num in numbers_found:
-            # Check if number or rounded integer exists in allowed
-            if num not in allowed and round(num) not in allowed and num not in (2.0, 5.0, 7.0, 10.0):
+            # Check if exact float or rounded integer exists in allowed
+            if num not in allowed_frozen and round(num) not in allowed_frozen:
                 # Hallucination detected! Fall back to template
                 from app.modules.llm_adapter.template_adapter import TemplatePhrasingAdapter
                 adapter = TemplatePhrasingAdapter()

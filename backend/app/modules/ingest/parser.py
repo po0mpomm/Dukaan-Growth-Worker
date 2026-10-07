@@ -13,6 +13,9 @@ from app.modules.ingest.schemas import (
     SALES_COLUMN_ALIASES,
     EXPENSES_COLUMN_ALIASES,
     UDHAAR_COLUMN_ALIASES,
+    SALES_ALIAS_MAP,
+    EXPENSES_ALIAS_MAP,
+    UDHAAR_ALIAS_MAP,
 )
 from app.modules.ingest.sanitizer import (
     sanitize_string,
@@ -83,7 +86,7 @@ def _sanitize_string_columns(df: pd.DataFrame) -> pd.DataFrame:
 def _parse_sales(data: bytes, filename: str, errors: List[str]) -> pd.DataFrame:
     try:
         df = _read_raw_dataframe(data, filename)
-        df = _map_columns(df, SALES_COLUMN_ALIASES)
+        df = _map_columns(df, SALES_ALIAS_MAP)
         df = _sanitize_string_columns(df)
 
         if "amount" in df.columns:
@@ -102,7 +105,7 @@ def _parse_sales(data: bytes, filename: str, errors: List[str]) -> pd.DataFrame:
 def _parse_expenses(data: bytes, filename: str, errors: List[str]) -> pd.DataFrame:
     try:
         df = _read_raw_dataframe(data, filename)
-        df = _map_columns(df, EXPENSES_COLUMN_ALIASES)
+        df = _map_columns(df, EXPENSES_ALIAS_MAP)
         df = _sanitize_string_columns(df)
 
         if "amount" in df.columns:
@@ -119,7 +122,7 @@ def _parse_expenses(data: bytes, filename: str, errors: List[str]) -> pd.DataFra
 def _parse_udhaar(data: bytes, filename: str, errors: List[str]) -> pd.DataFrame:
     try:
         df = _read_raw_dataframe(data, filename)
-        df = _map_columns(df, UDHAAR_COLUMN_ALIASES)
+        df = _map_columns(df, UDHAAR_ALIAS_MAP)
         df = _sanitize_string_columns(df)
 
         for col in ("opening_balance", "credit_taken", "repaid_amount"):

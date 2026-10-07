@@ -20,6 +20,7 @@ Worked example (PRD §8.1):
 """
 
 import calendar
+from collections import defaultdict
 from datetime import date
 
 from app.config import Settings
@@ -35,6 +36,25 @@ def compute_completeness(parsed: ParsedData, month: str, settings: Settings) -> 
     block_checks_failed = []
     warn_checks = []
 
+    # ── Handle parse errors / missing files early (DSA-7: short-circuit) ───────
+    if parsed.parse_errors:
+        for err in parsed.parse_errors:
+            if "FILE_PARSE_ERROR" in err:
+                block_checks_failed.append("FILE_MISSING")
+
+    # If critical files completely failed parsing, return early with ESCALATE
+    if "FILE_MISSING" in block_checks_failed:
+        return CompletenessResult(
+            score=0.0,
+            day_coverage=0.0,
+            expense_coverage=0.0,
+            udhaar_integrity=0.0,
+            flagged_row_ratio=1.0,
+            block_checks_failed=block_checks_failed,
+            warn_checks=warn_checks,
+            outcome=ValidationOutcome.ESCALATE,
+        )
+
     # ── Parse year and month ──────────────────────────────────────────────────
     try:
         year, mon = int(month[:4]), int(month[5:7])
@@ -42,12 +62,6 @@ def compute_completeness(parsed: ParsedData, month: str, settings: Settings) -> 
     except (ValueError, IndexError):
         block_checks_failed.append("INVALID_MONTH_FORMAT")
         days_in_month = 30
-
-    # ── Handle parse errors ───────────────────────────────────────────────────
-    if parsed.parse_errors:
-        for err in parsed.parse_errors:
-            if "FILE_PARSE_ERROR" in err:
-                block_checks_failed.append("FILE_MISSING")
 
     # ── Day coverage (PRD §8.1) ───────────────────────────────────────────────
     day_coverage = 0.0
@@ -118,27 +132,48 @@ def _compute_udhaar_integrity(parsed: ParsedData) -> float:
     """
     Udhaar integrity = 1 - (customers_with_negative_balance / total_active_customers)
     A customer has a negative balance if payments exceed credit + opening balance.
+    O(N) single-pass dictionary aggregation (DSA optimal).
     """
     try:
-        df = parsed.udhaar.copy()
-        if "amount" not in df.columns or "type" not in df.columns:
+        df = parsed.udhaar
+        if df.empty or "customer_ref" not in df.columns:
             return 1.0
 
-        df["amount"] = df["amount"].apply(pd.to_numeric, errors="coerce").fillna(0)
+        # Ledger summary format: opening_balance, credit_taken, repaid_amount
+        if any(col in df.columns for col in ("opening_balance", "credit_taken", "repaid_amount")):
+            negatives = 0
+            total = 0
+            for _, row in df.iterrows():
+                alias = str(row.get("customer_ref", "")).strip()
+                if not alias:
+                    continue
+                opening = float(row.get("opening_balance", 0.0) or 0.0)
+                taken = float(row.get("credit_taken", 0.0) or 0.0)
+                repaid = float(row.get("repaid_amount", 0.0) or 0.0)
+                total += 1
+                if (opening + taken) < repaid:
+                    negatives += 1
+            return 1.0 - (negatives / total) if total > 0 else 1.0
 
-        # Compute net balance per customer
-        def net_balance(group: "pd.DataFrame") -> float:
-            credit = group[group["type"].isin(["opening_balance", "credit_given"])]["amount"].sum()
-            payments = group[group["type"] == "payment_received"]["amount"].sum()
-            return credit - payments
+        # Transaction stream format: amount and type
+        if "amount" in df.columns and "type" in df.columns:
+            balances: defaultdict[str, float] = defaultdict(float)
+            for _, row in df.iterrows():
+                alias = str(row.get("customer_ref", "")).strip()
+                if not alias:
+                    continue
+                amt = float(row.get("amount", 0.0) or 0.0)
+                ctype = str(row.get("type", "")).lower()
+                if ctype in ("opening_balance", "credit_given", "credit"):
+                    balances[alias] += amt
+                elif ctype in ("payment_received", "payment", "repayment"):
+                    balances[alias] -= amt
 
-        import pandas as pd
-        balances = df.groupby("customer_ref").apply(net_balance)
-        negative_count = (balances < 0).sum()
-        total_customers = len(balances)
+            if not balances:
+                return 1.0
+            neg_count = sum(1 for bal in balances.values() if bal < 0)
+            return 1.0 - (neg_count / len(balances))
 
-        if total_customers == 0:
-            return 1.0
-        return 1.0 - (negative_count / total_customers)
+        return 1.0
     except Exception:
         return 1.0
