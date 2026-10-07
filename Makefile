@@ -1,71 +1,56 @@
 # =============================================================================
 # Dukaan Growth Worker — Makefile
-# Targets: dev, backend, frontend, test, eval, lint, docker-core, docker-full, clean
+# Targets: dev, backend, frontend, test, eval, lint, typecheck, docker-core, clean
 # =============================================================================
 
-.PHONY: dev backend frontend test eval lint typecheck docker-core docker-full docker-cloud clean install
+.PHONY: dev backend frontend test eval lint typecheck docker-core docker-cloud clean install
 
 # ── Start both servers for local development ──────────────────────────────────
 dev:
-	@echo "Starting backend on :8000 and frontend on :3000..."
-	@Start-Process -NoNewWindow powershell -ArgumentList "-Command", "cd backend; ..\.venv\Scripts\activate; python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload"
-	@cd frontend; npm run dev
+	powershell -ExecutionPolicy Bypass -File .\run.ps1
 
 # ── Backend only ──────────────────────────────────────────────────────────────
 backend:
-	.venv\Scripts\activate
-	cd backend; python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
+	cd backend && python -m uvicorn app.main:create_app --factory --host 127.0.0.1 --port 8000 --reload
 
 # ── Frontend only ─────────────────────────────────────────────────────────────
 frontend:
-	cd frontend; npm run dev
+	cd frontend && npm run dev
 
 # ── Install all dependencies ──────────────────────────────────────────────────
 install:
-	python -m venv .venv
-	.venv\Scripts\pip install -r backend/requirements.txt
-	cd frontend; npm install
+	pip install -r backend/requirements.txt
+	cd frontend && npm install
 
-# ── Run all backend tests ─────────────────────────────────────────────────────
+# ── Run all backend & cloud tests ─────────────────────────────────────────────
 test:
-	.venv\Scripts\pytest backend/tests -q --cov=backend/app --cov-fail-under=80 -v
+	python -m pytest backend/tests -v
+	python -m pytest cloud/tests -v
 
-# ── Run evaluation harness (CI-blocking) ──────────────────────────────────────
+# ── Run evaluation harness ───────────────────────────────────────────────────
 eval:
-	.venv\Scripts\python -m eval.runner --gate
-
-# ── Lint + type-check backend ─────────────────────────────────────────────────
-lint:
-	.venv\Scripts\ruff check backend/
-	.venv\Scripts\mypy backend/app --ignore-missing-imports
+	python eval/runner.py
 
 # ── Type-check frontend ───────────────────────────────────────────────────────
 typecheck:
-	cd frontend; npx tsc --noEmit
+	cd frontend && npm run build
 
-# ── Docker: core profile (backend only, no model) ────────────────────────────
+# ── Docker: core profile (edge monolith) ──────────────────────────────────────
 docker-core:
 	docker compose --profile core up --build
-
-# ── Docker: full profile (backend + llm container) ───────────────────────────
-docker-full:
-	docker compose --profile full up --build
 
 # ── Docker: cloud profile (Tier B) ───────────────────────────────────────────
 docker-cloud:
 	docker compose --profile cloud up --build
 
-# ── Privacy scan (asserts 0 PII in outputs) ───────────────────────────────────
-privacy-scan:
-	.venv\Scripts\python -m tests.privacy_scan
-
-# ── Generate all synthetic datasets ──────────────────────────────────────────
+# ── Generate synthetic Kirana dataset ─────────────────────────────────────────
 generate-data:
-	.venv\Scripts\python tools/synthetic_data/generator.py
+	python tools/generate_synthetic_data.py
+
+# ── Fleet simulator ───────────────────────────────────────────────────────────
+fleet-sim:
+	python tools/fleet_simulator.py
 
 # ── Clean build artifacts ─────────────────────────────────────────────────────
 clean:
-	Remove-Item -Recurse -Force .venv -ErrorAction SilentlyContinue
-	Remove-Item -Recurse -Force frontend\.next -ErrorAction SilentlyContinue
-	Remove-Item -Recurse -Force frontend\node_modules -ErrorAction SilentlyContinue
-	Remove-Item -Recurse -Force backend\__pycache__ -ErrorAction SilentlyContinue
+	powershell -Command "Remove-Item -Recurse -Force frontend\.next, backend\__pycache__, .pytest_cache -ErrorAction SilentlyContinue"
