@@ -1,6 +1,6 @@
-# Candidate Q&A: Define Before Building
-**Dukaan Growth Worker — 12 Foundational Architectural Responses**  
-**Author:** Anvaya Arsha | **Role:** AI / Forward-Deployed Engineer Candidate  
+# System Architecture & Design Q&A: Define Before Building
+**Dukaan Growth Worker — 12 Foundational Architectural Principles & Design Decisions**  
+**Product Specification & Technical Architecture Documentation**  
 
 ---
 

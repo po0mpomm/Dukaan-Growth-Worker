@@ -1,12 +1,12 @@
 # Video Demo Script & Presentation Guide (3–5 Minutes)
-**Dukaan Growth Worker — Walkthrough for Eko Reviewers**
+**Dukaan Growth Worker — Product Walkthrough & Demo Guide**
 
 ---
 
 ### Part 1: Introduction & The Problem (0:00 – 0:45)
 - **Visual:** Camera on speaker, or title card showing `🛒 Dukaan Growth Worker` with mobile viewport (375px) alongside the terminal.
 - **Narration:**
-  > *"Hi Eko team, I'm Anvaya. For micro-entrepreneurs and kirana store owners across India, bahi-khatas and ledgers track their daily livelihood, but at month-end, working capital is often mysteriously locked in customer credit or margin leaks.*  
+  > *"For micro-entrepreneurs and kirana store owners across India, bahi-khatas and ledgers track their daily livelihood, but at month-end, working capital is often mysteriously locked in customer credit or margin leaks.*  
   > *Existing solutions give them complex dashboards they don't have time to decipher, or generic chatbots that hallucinate numbers and require endless prompting.*  
   > *We built **Dukaan Growth Worker**: a local-first, deterministic AI Worker. The architectural philosophy is simple: **Code computes. Rules decide. The model only phrases. The system refuses to guess.** Let me show you how it works."*
 

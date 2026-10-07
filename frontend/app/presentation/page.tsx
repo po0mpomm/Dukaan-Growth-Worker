@@ -26,13 +26,13 @@ const SLIDES: Slide[] = [
     subtitleEn: "Distribution-as-a-Service for 10M+ Kirana Micro-Entrepreneurs",
     subtitleHi: "1 करोड़+ किराना दुकानदारों के लिए डिजिटल सहायक",
     keyPointsEn: [
-      "Built for Eko's mission: Empowering micro-entrepreneurs who run their community's retail backbone.",
+      "Our Mission: Empowering micro-entrepreneurs who run their community's retail backbone.",
       "Kirana stores operate with razor-thin margins (8-15%) and trapped working capital in uncollected udhaar.",
       "Traditional enterprise software is too complex; generic AI chatbots hallucinate numbers.",
       "Solution: An edge-first, deterministic AI worker that transforms messy bahi-khata spreadsheets into prioritized rupee recovery actions.",
     ],
     keyPointsHi: [
-      "ईको (Eko) के मिशन पर आधारित: समुदाय के सूक्ष्म-उद्यमियों को सशक्त बनाना।",
+      "हमारा मिशन: समुदाय के सूक्ष्म-उद्यमियों और किराना दुकानदारों को सशक्त बनाना।",
       "किराना दुकानों में कम मार्जिन (8-15%) और फंसे हुए उधार की बड़ी समस्या होती है।",
       "पारंपरिक सॉफ्टवेयर बहुत कठिन है और सामान्य चैटबॉट गलत आंकड़े बना देते हैं।",
       "समाधान: एक लोकल-फर्स्ट, सुरक्षित AI वर्कर जो बही-खाता डेटा से सीधी कमाई और रिकवरी कराता है।",

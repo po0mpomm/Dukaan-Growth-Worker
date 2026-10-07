@@ -1,7 +1,7 @@
 # Dukaan Growth Worker 🛒
 **Local-First, Privacy-Safe AI Worker for Kirana & Small Retail Growth**
 
-Built for **Eko's Micro-Entrepreneur Growth Worker** assignment (Applied AI / Agentic AI / Forward-Deployed AI Worker).  
+An autonomous, deterministic agentic system designed for micro-entrepreneurs and neighborhood retail store owners.  
 Repository: [https://github.com/po0mpomm/Dukaan-Growth-Worker](https://github.com/po0mpomm/Dukaan-Growth-Worker)
 
 ---
@@ -95,14 +95,14 @@ Inspect the historical evaluation progress register in [`eval/history.csv`](eval
 
 ---
 
-## 📋 Complete Deliverables Index
+## 📋 Complete Architecture & System Documentation
 
-All mandated deliverable items from the Eko assignment email are documented and implemented:
+Comprehensive technical specifications, architecture decision records, and evaluation deliverables:
 
 | Requirement | Deliverable File | Description |
 |:---|:---|:---|
 | **Learning Concept Report** | [`docs/LEARNING_CONCEPT_REPORT.md`](docs/LEARNING_CONCEPT_REPORT.md) | 3-page deep dive on Evaluation Harnesses for Deterministic AI Agents |
-| **Candidate Q&A** | [`docs/CANDIDATE_QA.md`](docs/CANDIDATE_QA.md) | Answers to all 12 "Define Before Building" questions |
+| **System Design Q&A** | [`docs/ARCHITECTURE_QA.md`](docs/ARCHITECTURE_QA.md) | Answers to all 12 foundational system architecture and design questions |
 | **Failure Scenarios** | [`docs/FAILURE_SCENARIOS.md`](docs/FAILURE_SCENARIOS.md) | 5 edge case failure walkthroughs & degradation mechanisms |
 | **Prompt Catalog** | [`docs/PROMPTS.md`](docs/PROMPTS.md) | System phrasing prompts, bilingual templates, and schemas |
 | **Workflow State Machine** | [`docs/STATE_DIAGRAM.md`](docs/STATE_DIAGRAM.md) | Mermaid state diagram, transition invariants, and timeouts |
@@ -141,10 +141,4 @@ All mandated deliverable items from the Eko assignment email are documented and 
 3. **Banded Consented Exports:** Only coarse categorical ranges (e.g. `revenue_band: 50K_150K`, `rules_fired: ["W1"]`) can sync to the cloud with explicit owner consent.
 4. **k-Anonymity ($k \ge 5$):** The cloud aggregation plane suppresses macro-cohort cells with fewer than 5 shops.
 5. **Right to Erasure:** A single-tap `DELETE /v1/data` endpoint purges all local databases immediately.
-
----
-
-## Candidate
-**Anvaya Arsha** — Applied AI / Agentic AI / Forward-Deployed Engineer  
-Eko Evaluation Assignment · October 2026
 

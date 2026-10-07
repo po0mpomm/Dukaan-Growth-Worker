@@ -1,6 +1,6 @@
 # Dukaan Growth Worker: Technical Requirements Document (TRD) v2.0
 
-**Author:** Anvaya Arsha | **Version:** 2.0 | **Date:** 7 Oct 2026 | **Companion:** PRD v2.0 | **Status:** Build-ready, reviewed
+**Version:** 2.0 | **Date:** October 2026 | **Companion:** PRD v2.0 | **Status:** Production-ready
 
 ---
 
@@ -29,7 +29,7 @@ In scope: architecture, service contracts, data stores, guardrails, security, co
 
 ### 2.1 Two planes
 
-| | **Edge plane (shop device)** | **Control plane (Eko cloud)** |
+| | **Edge plane (shop device)** | **Control plane (platform cloud)** |
 | --- | --- | --- |
 | Purpose | Run the worker, hold all PII, work offline | Receive consented aggregates, distribute signed rule packs, run evaluations, show mission control |
 | Runtime | Native Portable, or Docker Compose profiles | Kubernetes (Helm) |
@@ -52,7 +52,7 @@ A boundary becomes a separate deployable only when it has a **different failure 
 - `SERVICES=all` is the modular monolith (Portable, `core`, `full`).
 - `SERVICES=analytics` (and so on) runs one module as its own service behind HTTP (the `split` profile).
 
-The service boundaries, contracts and tests are real in every shape. The `split` profile demonstrates the microservice architecture to reviewers without forcing its cost on a shop device.
+The service boundaries, contracts and tests are real in every shape. The `split` profile demonstrates the microservice architecture without forcing its cost on a shop device.
 
 ### 2.3 ADRs
 
@@ -326,7 +326,7 @@ x-hardened: &hardened
 services:
   worker:                       # modular monolith, SERVICES=all
     <<: *hardened
-    image: ghcr.io/anvaya/dukaan-edge:${TAG}
+    image: ghcr.io/po0mpomm/dukaan-edge:${TAG}
     profiles: [core, full]
     environment: {SERVICES: all, LLM_URL: "http://llm:8081"}
     ports: ["8443:8443"]
@@ -344,17 +344,17 @@ services:
     networks: [internal]
 
   # split profile: same image, one module per container
-  gateway:      {<<: *hardened, profiles: [split], image: ghcr.io/anvaya/dukaan-edge:${TAG}, environment: {SERVICES: gateway}}
-  orchestrator: {<<: *hardened, profiles: [split], image: ghcr.io/anvaya/dukaan-edge:${TAG}, environment: {SERVICES: orchestrator}}
-  analytics:    {<<: *hardened, profiles: [split], image: ghcr.io/anvaya/dukaan-edge:${TAG}, environment: {SERVICES: analytics}}
-  guardrails:   {<<: *hardened, profiles: [split], image: ghcr.io/anvaya/dukaan-edge:${TAG}, environment: {SERVICES: guardrails}}
-  privacy:      {<<: *hardened, profiles: [split], image: ghcr.io/anvaya/dukaan-edge:${TAG}, environment: {SERVICES: privacy}}
-  audit:        {<<: *hardened, profiles: [split], image: ghcr.io/anvaya/dukaan-edge:${TAG}, environment: {SERVICES: audit}}
+  gateway:      {<<: *hardened, profiles: [split], image: ghcr.io/po0mpomm/dukaan-edge:${TAG}, environment: {SERVICES: gateway}}
+  orchestrator: {<<: *hardened, profiles: [split], image: ghcr.io/po0mpomm/dukaan-edge:${TAG}, environment: {SERVICES: orchestrator}}
+  analytics:    {<<: *hardened, profiles: [split], image: ghcr.io/po0mpomm/dukaan-edge:${TAG}, environment: {SERVICES: analytics}}
+  guardrails:   {<<: *hardened, profiles: [split], image: ghcr.io/po0mpomm/dukaan-edge:${TAG}, environment: {SERVICES: guardrails}}
+  privacy:      {<<: *hardened, profiles: [split], image: ghcr.io/po0mpomm/dukaan-edge:${TAG}, environment: {SERVICES: privacy}}
+  audit:        {<<: *hardened, profiles: [split], image: ghcr.io/po0mpomm/dukaan-edge:${TAG}, environment: {SERVICES: audit}}
 
   cloud-api:                    # Tier B
     <<: *hardened
     profiles: [cloud]
-    image: ghcr.io/anvaya/dukaan-cloud:${TAG}
+    image: ghcr.io/po0mpomm/dukaan-cloud:${TAG}
     depends_on: {db: {condition: service_healthy}, valkey: {condition: service_started}}
     networks: [cloudnet]
   db:
@@ -412,7 +412,7 @@ spec:
 - **Tier A:** structured JSON logs and the audit log only; a local `/metrics` endpoint with counters (runs, escalations, fallbacks, guardrail blocks by layer, stage latency).
 - **Tier B:** Prometheus and Grafana (self-hosted, one dashboard) for the cloud services.
 - **Tier C:** OpenTelemetry traces, Loki, Alertmanager.
-- **Edge to Eko:** health counters leave the device only inside the consented aggregate (never automatically).
+- **Edge to platform:** health counters leave the device only inside the consented aggregate (never automatically).
 - **SLOs (cloud):** ingest availability 99.5%; p95 ingest latency under 500 ms; DLQ non-empty for over 15 minutes alerts; pack distribution success above 99%.
 - **Rule:** no PII or row-level data in any log, trace or metric label. Enforced by a log-scrubbing test and a metric-label cardinality check in CI.
 
@@ -525,7 +525,7 @@ Tier C adds staging deploy through Argo CD, smoke and load tests, a manual produ
 | **B (Days 8 to 10, only if A is demo-ready)** | Compose `cloud`; fleet simulator (40 shops); k-suppressed mission-control view; signed rule pack; Helm chart on k3d; Grafana dashboard | Rs 0 |
 | **C (after joining, paid)** | Managed Kubernetes in India, device enrolment and attestation, hardware-backed keys, full observability, Argo CD canaries, backups and DR, pen-test, compliance review | See PRD section 20 |
 
-**Rule:** if Tier A slips by more than a day, drop `split` polish and the Hindi read-aloud before touching the harness, the failure demo or the privacy tests. Those are what Eko evaluates.
+**Rule:** if Tier A slips by more than a day, drop `split` polish and the Hindi read-aloud before touching the harness, the failure demo or the privacy tests. Those are the critical quality gates.
 
 ## 22. Risks, decisions, open questions
 
@@ -534,7 +534,7 @@ Tier C adds staging deploy through Argo CD, smoke and load tests, a manual produ
 | Microservice overhead on 4 GB | ADR-001, ADR-007; measure and publish numbers |
 | Small-model Hindi quality | Templates default; harness decides; model never required |
 | Cloud cost | Tier A and B cost nothing; Tier C is mostly managed Kubernetes and Postgres |
-| DPDP interpretation | Notice, consent, roles and residency reviewed by Eko compliance |
+| DPDP interpretation | Notice, consent, roles and residency reviewed by legal and compliance team |
 | Free-tier terms change | Demo uses local containers, not free-tier SaaS; verify any hosted free tier before depending on it |
 | Open: attestation on Android and low-end laptops | Decide in Tier C with field constraints |
-| Open: managed versus self-hosted Postgres/Valkey for Eko | Affects Tier C cost and operations |
+| Open: managed versus self-hosted Postgres/Valkey for the platform | Affects Tier C cost and operations |

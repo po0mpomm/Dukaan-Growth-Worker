@@ -1,8 +1,7 @@
 # Learning Concept Report: Evaluation Harnesses for Deterministic AI Agents
 
-**Author:** Anvaya Arsha  
-**Topic Selected:** Evaluation Harnesses for Deterministic AI Agents  
-**Target Domain:** Micro-Enterprise & Kirana Growth (Eko Assignment)  
+**Topic:** Evaluation Harnesses for Deterministic AI Agents  
+**Target Domain:** Micro-Enterprise & Kirana Growth  
 **Date:** October 2026  
 
 ---
@@ -75,7 +74,7 @@ If a model attempts to introduce an unauthorized numerical claim (e.g. "Increase
 
 ## 4. Empirical Evolution: The `eval/history.csv` Story
 
-Eko explicitly asked for an honest evaluation history documenting what failed, what was fixed, and how the system reached production readiness:
+Rigorous product engineering requires an honest evaluation history documenting what failed, what was fixed, and how the system reached production readiness:
 
 ```csv
 iteration,date,model_mode,completeness_accuracy,g5_factuality_rate,g1_sanitization_rate,avg_latency_s,status,notes
@@ -91,7 +90,7 @@ iteration,date,model_mode,completeness_accuracy,g5_factuality_rate,g1_sanitizati
 
 ---
 
-## 5. Conclusion & Recommendations for Eko
+## 5. Conclusion & Architectural Recommendations
 
 Building AI for micro-entrepreneurs requires humility and rigorous engineering:
 1. **Never let an LLM do math or make policy decisions.** Treat LLMs strictly as multilingual rendering engines.

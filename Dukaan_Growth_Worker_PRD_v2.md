@@ -1,7 +1,7 @@
 # Dukaan Growth Worker: Product Requirements Document (PRD) v2.0
 
-**Author:** Anvaya Arsha | **Version:** 2.0 | **Date:** 7 Oct 2026 | **Companion:** TRD v2.0 | **Status:** Build-ready, reviewed
-**Context:** Applied AI / Forward-Deployed evaluation assignment for Eko
+**Version:** 2.0 | **Date:** October 2026 | **Companion:** TRD v2.0 | **Status:** Production-ready  
+**Context:** Local-First Agentic AI Worker for Micro-Retail & Kirana Operations
 
 ---
 
@@ -33,13 +33,13 @@ v1.0 was strong on concept but had defects that would have surfaced in the demo 
 
 Dukaan Growth Worker is a **local-first, bounded AI Worker** that turns a kirana or small retail owner's monthly records (sales, expenses, udhaar/credit) into **up to three weak areas with evidence, three plain-language actions, and a ranked top-5 follow-up list**, in Hindi or English, on a low-end device, without needing the internet.
 
-It owns one workflow end to end: **messy records in, validated insight and actions out, month-on-month progress tracked, only consented and banded aggregates shared with Eko**. When data is weak it escalates instead of advising.
+It owns one workflow end to end: **messy records in, validated insight and actions out, month-on-month progress tracked, only consented and banded aggregates shared with the platform control plane**. When data is weak it escalates instead of advising.
 
 The LLM never calculates, never decides what is wrong, and is optional. If it fails, reviewed templates deliver the same verified facts.
 
 ## 2. Problem and context
 
-Eko's micro-entrepreneurs often run on notebooks, WhatsApp and memory.
+Micro-entrepreneurs in Indian Tier 2 / Tier 3 markets often run on notebooks, WhatsApp and memory.
 
 - Money is stuck in **udhaar** and nobody tracks who is overdue, or for how long.
 - Owners feel sales are slow but cannot see which days, categories or customers changed.
@@ -63,15 +63,15 @@ Because the platform is tied to livelihood, a wrong or overconfident answer has 
 - Not a dashboard product, accounting tool or GST software.
 - No lending, credit scoring of the owner, or financial/legal/tax advice.
 - No automatic messages to customers. The owner always sends.
-- No cloud dependency in the analysis path; Eko never receives names or phone numbers.
+- No cloud dependency in the analysis path; the platform control plane never receives names or phone numbers.
 
-## 4. Eko's required definition
+## 4. Product definition
 
 | Item | Definition |
 | --- | --- |
 | **Goal** | Increase recovered udhaar and repeat-customer sales for a micro-shop; make monthly growth visible and actionable. |
-| **User** | Primary: kirana/small retail owner. Secondary: Eko field agent sitting with the owner. Tertiary: Eko mission control (consented aggregates only). |
-| **System** | Sits inside Eko's micro-entrepreneur loop: owner records, monthly review, follow-up actions, next-month comparison, optional consented aggregate to Eko. |
+| **User** | Primary: kirana/small retail owner. Secondary: platform field agent sitting with the owner. Tertiary: platform mission control (consented aggregates only). |
+| **System** | Sits inside the micro-entrepreneur growth loop: owner records, monthly review, follow-up actions, next-month comparison, optional consented aggregate to the platform control plane. |
 | **Inputs** | Three CSV/XLSX files (sales, expenses, udhaar incl. opening balances), previous local snapshot, optional owner language/region settings. |
 | **Outputs** | Health verdict, up to 3 weak areas with rupee evidence, 3 actions, top-5 follow-up list, MoM comparison, copyable reminder drafts, optional aggregate export. |
 | **Decisions** | May recommend, rank, flag, and choose proceed / proceed-with-caveat / escalate. May not act on money or customers. |
@@ -86,7 +86,7 @@ Because the platform is tied to livelihood, a wrong or overconfident answer has 
 
 **Meena Devi, 41, kirana owner, semi-urban.** Basic Android phone; uses WhatsApp and voice notes; reads Hindi better than English; keeps a notebook and a rough Excel on a cousin's laptop. Wants: "who owes me, and what should I do this week?" Fears: a tool she cannot understand; losing customer trust by chasing the wrong person.
 
-**Field agent (Eko).** Visits weekly, helps load records, explains output, observes failures. Needs a clear escalation reason, not a stack trace.
+**Field agent.** Visits weekly, helps load records, explains output, observes failures. Needs a clear escalation reason, not a stack trace.
 
 **Mission control.** Wants comparable, banded aggregates across many shops. Must never receive identifiable data.
 
@@ -127,7 +127,7 @@ P0 = must ship in the prototype, P1 = should, P2 = next version.
 | FR-18 | Voice-note input via local speech-to-text. | P2 |
 | FR-19 | Android-native offline app. | P2 |
 
-### 7.2 Control plane (Eko side)
+### 7.2 Control plane (platform side)
 
 | ID | Requirement | Pri |
 | --- | --- | --- |
@@ -148,7 +148,7 @@ P0 = must ship in the prototype, P1 = should, P2 = next version.
 | **Compose `core`** | Linux mini-PC, field-agent laptop, demo | One worker container, no model |
 | **Compose `full`** | 8 GB machine, demo | `core` plus a separate model container |
 | **Compose `split`** | Demonstrating the microservice architecture | Every module as its own container |
-| **Compose `cloud`** | Demo of Eko side | Cloud API, Postgres, Valkey |
+| **Compose `cloud`** | Demo of platform control plane | Cloud API, Postgres, Valkey |
 | **Kubernetes** | Cloud plane (stretch for demo, required for production) | Helm on k3d/kind locally |
 
 Rationale and numbers are in TRD section 2.
@@ -256,13 +256,13 @@ Principle: **privacy by architecture**. The system lacks the ability to send PII
 | `customer_ref` aliases | Pseudonymous | Local | Used in analysis; stripped from export |
 | Sales, expenses, udhaar rows; `customer_activity` | Business-confidential | Local | Never exported at row level |
 | Run logs and audit | Operational | Local | IDs, states, reason codes; no names, phones, or customer-level amounts |
-| Banded aggregates | **Pseudonymous** (not anonymous) | May flow to Eko | Only after preview and consent |
+| Banded aggregates | **Pseudonymous** (not anonymous) | May flow to platform control plane | Only after preview and consent |
 
 **Aggregate allow-list (all else blocked):** rotating pseudonymous shop ID, month, region type (urban/semi-urban/rural), sales-change band, credit-share band, overdue band, rule IDs fired, completeness band, action-completion band.
 
 **Controls:** data minimisation; purpose limitation; preview of the exact payload and hash match; revocable, plain-language consent in Hindi and English; **banding on device, k-suppression (k at least 5) in the cloud query layer**; shop ID rotated every 6 months so months cannot be linked indefinitely; one-tap local deletion plus a queued deletion marker for cloud rows; no third-party SDKs or telemetry on the device; automated tests asserting that exports contain only allow-listed keys and that logs contain no planted PII.
 
-**Honest limits:** a pseudonymous shop ID plus region type may still identify a shop in a very small area, so the cloud applies k-suppression and, for tiny regions, coarser regions. The shopkeeper holds third-party customer data, so notice, consent and roles (who is the data fiduciary for what) need review by Eko's compliance owner against the DPDP Act 2023 and the current Rules and their phase-in dates before any real deployment. This prototype uses synthetic data only.
+**Honest limits:** a pseudonymous shop ID plus region type may still identify a shop in a very small area, so the cloud applies k-suppression and, for tiny regions, coarser regions. The shopkeeper holds third-party customer data, so notice, consent and roles (who is the data fiduciary for what) need legal and compliance review against the DPDP Act 2023 and the current Rules and their phase-in dates before any real deployment. This prototype uses synthetic data only.
 
 ## 13. Logging, audit, memory
 
@@ -328,7 +328,7 @@ Principle: **privacy by architecture**. The system lacks the ability to send PII
 
 ## 19. Build tiers and delivery plan
 
-**Cut line.** Tier A is the assignment. Tier B only after Tier A is demo-ready. Tier C is documented, not built.
+**Cut line.** Tier A is the v1 scope. Tier B only after Tier A is demo-ready. Tier C is documented, not built.
 
 | Tier | Scope | Cost |
 | --- | --- | --- |
@@ -338,7 +338,7 @@ Principle: **privacy by architecture**. The system lacks the ability to send PII
 
 | Day | Deliverable |
 | --- | --- |
-| 1 | Reply to Eko; synthetic data generator; schemas; this PRD and TRD frozen |
+| 1 | Synthetic data generator; schemas; this PRD and TRD frozen |
 | 2 | Validation, metrics, FIFO aging, rules, scoring, unit tests |
 | 3 | State machine, checkpoints, audit chain, SQLite stores |
 | 4 | Model integration, JSON schema, G2 to G6, templates, fallback; baseline harness run |
@@ -388,18 +388,18 @@ Principle: **privacy by architecture**. The system lacks the ability to send PII
 | A2 | Enough sales carry a `customer_ref` for lapse detection | Ask field agents; otherwise limit lapse logic to udhaar customers |
 | A3 | 20% credit share and 30-day overdue are meaningful thresholds | Calibrate with real aggregates |
 | A4 | A 1B model on 4 GB CPU is usable | Measure; else Lite mode only |
-| A5 | Consent notice wording is acceptable | Eko compliance review |
+| A5 | Consent notice wording is acceptable | Legal and compliance review |
 | Q1 | Phone-native offline app versus local web UI? | Pilot feedback |
 | Q2 | Family-run, multi-owner shops? | Field |
-| Q3 | Managed or self-hosted data services for Eko? | Eko decision |
+| Q3 | Managed or self-hosted data services for the platform? | Platform ops decision |
 
 ## 23. Version 2 roadmap
 
 Action tracking with outcome learning; voice input in local languages; Android offline app; field-agent mode with deviation report; threshold calibration from real aggregates; one-tap drafted messages with approval; CI regression gate; more languages.
 
-## 24. Traceability and submission mapping
+## 24. Traceability map
 
-| Eko checklist item | Where |
+| Topic | Section |
 | --- | --- |
 | Goal and system definition | 4 |
 | Definition of Done | 15 |
